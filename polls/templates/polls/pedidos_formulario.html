@@ -1,0 +1,63 @@
+{% extends 'polls/base.html' %}
+{% load form_tags %}
+
+{% block title %}Nuevo Pedido{% endblock %}
+
+{% block content %}
+<div class="contenedor-pedido">
+    <h1>🛒 Nuevo Pedido de Importación</h1>
+    <p>Seleccione los productos y las cantidades que desea importar. El pedido quedará en estado pendiente hasta que sea revisado por nuestro equipo.</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <table class="tabla-productos">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Descripción</th>
+                    <th>Precio unitario</th>
+                    <th>Stock disponible</th>
+                    <th>Cantidad a pedir</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr>
+                    <td><strong>{{ producto.nombre }}</strong><br><small>SKU: {{ producto.codigo_sku }}</small></td>
+                    <td>{{ producto.descripcion|truncatechars:80 }}</td>
+                    <td class="precio">${{ producto.precio_unitario|floatformat:2 }}</td>
+                    <td class="stock">{{ producto.cantidad_disponible }}</td>
+                    <td>
+                        {% with field_name="cantidad_"|add:producto.id|stringformat:"s" %}
+                        <input type="number"
+                               name="cantidad_{{ producto.id }}"
+                               min="0"
+                               max="{{ producto.cantidad_disponible }}"
+                               value="0"
+                               class="cantidad-input"
+                               data-stock="{{ producto.cantidad_disponible }}">
+                        {% endwith %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="no-productos">No hay productos disponibles en este momento.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="acciones">
+            <a href="{% url 'mis_pedidos' %}" class="boton-cancelar">Ver Mis Pedidos</a>
+            <button type="submit" class="boton-enviar">✅ Enviar Pedido</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

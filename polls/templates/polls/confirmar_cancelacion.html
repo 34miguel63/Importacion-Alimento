@@ -1,0 +1,41 @@
+{% extends 'polls/base.html' %}
+
+{% block title %}Cancelar Pedido #{{ pedido.id }}{% endblock %}
+
+{% block content %}
+<div class="confirmacion-container">
+    <div class="confirmacion-card">
+        <h1>⚠️ Confirmar Cancelación</h1>
+        
+        <div class="pedido-info-resumen">
+            <h3>Pedido #{{ pedido.id }}</h3>
+            <p><strong>Fecha:</strong> {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+            <p><strong>Estado:</strong> {{ pedido.get_estado_display }}</p>
+            <p><strong>Peso total:</strong> {{ pedido.peso_total_lb }} lb</p>
+            <p><strong>Monto total:</strong> ${{ pedido.monto_total }}</p>
+            <p><strong>Productos:</strong> {{ pedido.lineas.count }} items</p>
+        </div>
+        
+        <div class="alert alert-warning">
+            <strong>⚠️ Atención:</strong> Al cancelar este pedido:
+            <ul>
+                <li>El stock de los productos será devuelto al inventario</li>
+                <li>El pedido quedará en estado "Cancelado"</li>
+                <li>Esta acción no se puede deshacer</li>
+            </ul>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="acciones-confirmacion">
+                <button type="submit" class="btn btn-danger btn-lg">
+                    🗑️ Sí, Cancelar Pedido
+                </button>
+                <a href="{% url 'detalle_pedido' pedido.id %}" class="btn btn-secondary btn-lg">
+                    ← No, Volver
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

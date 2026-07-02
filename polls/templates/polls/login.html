@@ -1,0 +1,56 @@
+{% extends 'polls/base.html' %}
+{% load static %}
+
+{% block title %}Iniciar Sesión - AbdelProduction{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>🔐 Iniciar Sesión</h1>
+            <p>Sistema de Importación de Alimentos</p>
+        </div>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="username">
+                    <span class="icon">👤</span> Nombre de usuario:
+                </label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    required 
+                    class="form-control"
+                    placeholder="Ingrese su usuario"
+                    autofocus
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">
+                    <span class="icon">🔑</span> Contraseña:
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    class="form-control"
+                    placeholder="Ingrese su contraseña"
+                >
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full btn-lg">
+                <span class="icon">✅</span> Entrar
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>¿No tiene cuenta? <a href="{% url 'registro' %}">Regístrese aquí</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

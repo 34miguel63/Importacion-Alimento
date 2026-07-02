@@ -1,0 +1,124 @@
+{% extends 'polls/base.html' %}
+{% load static %}
+{% load form_tags %}
+
+{% block title %}Modificar Pedido #{{ pedido.id }}{% endblock %}
+
+{% block content %}
+<div class="formulario-pedido-container">
+    <div class="header-formulario">
+        <h1>✏️ Modificar Pedido #{{ pedido.id }}</h1>
+        <p class="subtitle">
+            Puede modificar las cantidades de su pedido. El stock se actualizará automáticamente.
+        </p>
+        
+        <div class="info-pedido">
+            <span class="badge badge-info">📅 Creado: {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</span>
+            <span class="badge badge-warning">⚠️ Estado: {{ pedido.get_estado_display }}</span>
+            <span class="badge badge-info">⚖️ Peso: {{ pedido.peso_total_lb }} lb</span>
+            <span class="badge badge-info">💰 Total: ${{ pedido.monto_total|floatformat:2 }}</span>
+        </div>
+    </div>
+
+    <form method="post" class="formulario-pedido">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <strong>⚠️ Errores:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <div class="seccion-productos">
+            <h2>🛒 Productos del Pedido</h2>
+            
+            <div class="productos-grid">
+                {% for producto in productos %}
+                    {% with field_name="cantidad_"|add:producto.id %}
+                    <div class="producto-card">
+                        <div class="producto-info">
+                            <h3>{{ producto.nombre }}</h3>
+                            <p class="producto-sku">SKU: {{ producto.codigo_sku }}</p>
+                            <p class="producto-descripcion">{{ producto.descripcion|truncatewords:15 }}</p>
+                            
+                            <div class="producto-detalles">
+                                <div class="detalle-item">
+                                    <span class="label">Precio:</span>
+                                    <span class="value precio">${{ producto.precio_unitario|floatformat:2 }}</span>
+                                </div>
+                                <div class="detalle-item">
+                                    <span class="label">Stock disponible:</span>
+                                    <span class="value">{{ producto.cantidad_disponible }} {{ producto.unidad_medida }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="cantidad-control">
+                                <label for="id_cantidad_{{ producto.id }}">Cantidad:</label>
+                                <input 
+                                    type="number" 
+                                    id="id_cantidad_{{ producto.id }}" 
+                                    name="{{ field_name }}"
+                                    min="0" 
+                                    max="{{ producto.cantidad_disponible }}"
+                                    value="{{ form|get_item:field_name|default:0 }}"
+                                    class="cantidad-input"
+                                    data-producto-id="{{ producto.id }}"
+                                    data-stock="{{ producto.cantidad_disponible }}"
+                                    data-precio="{{ producto.precio_unitario }}"
+                                    placeholder="0"
+                                >
+                                <span class="unidad">{{ producto.unidad_medida }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% empty %}
+                    <div class="no-productos">
+                        <p>No hay productos disponibles.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="seccion-observaciones">
+            <h2>📝 Observaciones</h2>
+            <div class="form-group">
+                {{ form.observaciones }}
+            </div>
+        </div>
+
+        <div class="acciones-formulario">
+            <button type="submit" class="btn btn-primary btn-lg">
+                💾 Guardar Cambios
+            </button>
+            <a href="{% url 'detalle_pedido' pedido.id %}" class="btn btn-secondary btn-lg">
+                ← Volver al Detalle
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript para validación en tiempo real -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.cantidad-input');
+    
+    inputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const maxStock = parseInt(this.dataset.stock);
+            const currentValue = parseInt(this.value) || 0;
+            
+            if (currentValue > maxStock) {
+                this.value = maxStock;
+                alert('La cantidad no puede superar el stock disponible');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

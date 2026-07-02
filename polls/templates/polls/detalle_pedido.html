@@ -1,0 +1,85 @@
+{% extends 'polls/base.html' %}
+{% load static %}
+
+{% block title %}Detalle Pedido #{{ pedido.id }}{% endblock %}
+
+{% block content %}
+<div class="detalle-container">
+    <div class="detalle-header">
+        <h1>📦 Pedido #{{ pedido.id }}</h1>
+        <a href="{% url 'mis_pedidos' %}" class="btn btn-secondary">← Volver</a>
+    </div>
+    
+    <!-- Información del Pedido -->
+    <div class="pedido-resumen">
+        <div class="resumen-card">
+            <h3>Información del Pedido</h3>
+            <div class="resumen-info">
+                <p><strong>Fecha:</strong> {{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                <p><strong>Estado:</strong> 
+                    <span class="estado-badge estado-{{ pedido.estado }}">
+                        {{ pedido.get_estado_display }}
+                    </span>
+                </p>
+                <p><strong>Cliente:</strong> {{ pedido.cliente.user.get_full_name|default:pedido.cliente.user.username }}</p>
+                <p><strong>Tipo de Pedido:</strong> {{ pedido.get_tipo_pedido_display }}</p>
+                <p><strong>Peso Total:</strong> {{ pedido.peso_total_lb }} lb</p>
+                <p><strong>Total:</strong> ${{ pedido.monto_total|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Productos del Pedido -->
+    <div class="lineas-pedido">
+        <h2>🛒 Productos del Pedido</h2>
+        <table class="tabla-productos">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>SKU</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unitario</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for linea in lineas %}
+                    <tr>
+                        <td>{{ linea.producto.nombre }}</td>
+                        <td>{{ linea.producto.codigo_sku }}</td>
+                        <td>{{ linea.cantidad }}</td>
+                        <td>${{ linea.precio_unitario|floatformat:2 }}</td>
+                        <td>${{ linea.subtotal|floatformat:2 }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="total-row"><strong>TOTAL:</strong></td>
+                    <td class="total-row"><strong>${{ pedido.monto_total|floatformat:2 }}</strong></td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="total-row"><strong>PESO TOTAL:</strong></td>
+                    <td class="total-row"><strong>{{ pedido.peso_total_lb }} lb</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+    <!-- Acciones -->
+    <div class="acciones-detalle">
+        {% if pedido.estado == 'pendiente' %}
+            <a href="{% url 'modificar_pedido' pedido.id %}" class="btn btn-primary">
+                ✏️ Modificar Pedido
+            </a>
+            <form method="post" action="{% url 'eliminar_pedido' pedido.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" 
+                        onclick="return confirm('¿Está seguro de eliminar este pedido?')">
+                    🗑️ Eliminar Pedido
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

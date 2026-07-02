@@ -1,0 +1,134 @@
+{% extends 'polls/base.html' %}
+{% load static %}
+
+{% block title %}Registro de Cliente - AbdelProduction{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card auth-card-large">
+        <div class="auth-header">
+            <h1>📝 Registro de Cliente</h1>
+            <p>Complete el formulario para registrarse en el sistema</p>
+        </div>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_username">
+                        <span class="icon">👤</span> Nombre de usuario:
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="error-message">
+                            {{ form.username.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_email">
+                        <span class="icon">📧</span> Correo Electrónico:
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="error-message">
+                            {{ form.email.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_first_name">
+                        <span class="icon">👤</span> Nombre:
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                        <div class="error-message">
+                            {{ form.first_name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_last_name">
+                        <span class="icon">👤</span> Apellidos:
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                        <div class="error-message">
+                            {{ form.last_name.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_ci">
+                        <span class="icon">🆔</span> Carnet de Identidad:
+                    </label>
+                    {{ form.ci }}
+                    {% if form.ci.errors %}
+                        <div class="error-message">
+                            {{ form.ci.errors }}
+                        </div>
+                    {% endif %}
+                    <small class="form-help">11 dígitos sin espacios</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_cuenta_banco">
+                        <span class="icon">🏦</span> Cuenta Bancaria:
+                    </label>
+                    {{ form.cuenta_banco }}
+                    {% if form.cuenta_banco.errors %}
+                        <div class="error-message">
+                            {{ form.cuenta_banco.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="id_password1">
+                        <span class="icon">🔑</span> Contraseña:
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                        <div class="error-message">
+                            {{ form.password1.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_password2">
+                        <span class="icon">🔑</span> Confirmar Contraseña:
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                        <div class="error-message">
+                            {{ form.password2.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <span class="icon">✅</span> Registrarse
+                </button>
+            </div>
+        </form>
+        
+        <div class="auth-footer">
+            <p>¿Ya tiene cuenta? <a href="{% url 'login' %}">Inicie sesión aquí</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

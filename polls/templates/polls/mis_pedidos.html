@@ -1,0 +1,51 @@
+{% extends 'polls/base.html' %}
+
+{% block title %}Mis Pedidos{% endblock %}
+
+{% block content %}
+<div class="pedidos-container">
+    <h1>📋 Mis Pedidos</h1>
+    
+    {% if pedidos %}
+        <div class="pedidos-list">
+            {% for pedido in pedidos %}
+                <div class="pedido-card estado-{{ pedido.estado }}">
+                    <div class="pedido-header">
+                        <h3>Pedido #{{ pedido.id }}</h3>
+                        <span class="pedido-fecha">{{ pedido.fecha_creacion|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <div class="pedido-info">
+                        <div class="info-item">
+                            <strong>Estado:</strong>
+                            <span class="estado-badge">{{ pedido.get_estado_display }}</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Productos:</strong>
+                            <span>{{ pedido.lineas.count }} items</span>
+                        </div>
+                        <div class="info-item">
+                            <strong>Total:</strong>
+                            <span class="precio-total">${{ pedido.total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    <div class="pedido-actions">
+                        <a href="{% url 'detalle_pedido' pedido.id %}" class="btn-secondary">👁️ Ver Detalle</a>
+                        {% if pedido.estado == 'pendiente' %}
+                            <form method="post" action="{% url 'eliminar_pedido' pedido.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-danger" onclick="return confirm('¿Está seguro de eliminar este pedido? Se devolverá el stock.')">🗑️ Eliminar</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-pedidos">
+            <h3>No tiene pedidos realizados</h3>
+            <p>Comience creando su primer pedido de importación.</p>
+            <a href="{% url 'crear_pedido' %}" class="btn-primary">🛒 Crear Primer Pedido</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

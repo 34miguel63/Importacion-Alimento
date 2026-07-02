@@ -1,0 +1,210 @@
+{% extends 'polls/base.html' %}
+{% load static %}
+{% load form_tags %}
+
+{% block title %}Nuevo Pedido - AbdelProduction{% endblock %}
+
+{% block content %}
+<div class="formulario-pedido-container">
+    <div class="header-formulario">
+        <h1>📦 Formulario de Pedido de Importación</h1>
+        <p class="subtitle">
+            Seleccione los productos y cantidades que desea importar. 
+            <strong>Nota:</strong> Si el peso total supera 200 lb, se requerirá gestión de contenedor.
+        </p>
+        
+        <div class="info-cliente">
+            <span class="badge badge-info">
+                👤 Cliente: {{ cliente.user.get_full_name|default:cliente.user.username }}
+            </span>
+            <span class="badge badge-info">
+                🆔 CI: {{ cliente.ci }}
+            </span>
+        </div>
+    </div>
+
+    <form method="post" class="formulario-pedido" id="formPedido">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                <strong>⚠️ Errores en el formulario:</strong>
+                <ul>
+                    {% for error in form.non_field_errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Sección de Productos -->
+        <div class="seccion-productos">
+            <h2>🛒 Productos Disponibles para Importación</h2>
+            
+            <div class="productos-grid">
+                {% for producto in productos %}
+                    <div class="producto-card" data-producto-id="{{ producto.id }}">
+                        <div class="producto-header">
+                            {% if producto.imagen %}
+                                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                            {% else %}
+                                <div class="producto-imagen-placeholder">📦</div>
+                            {% endif %}
+                            <span class="badge-stock">
+                                Stock: {{ producto.cantidad_disponible }} {{ producto.unidad_medida }}
+                            </span>
+                        </div>
+                        
+                        <div class="producto-info">
+                            <h3 class="producto-nombre">{{ producto.nombre }}</h3>
+                            <p class="producto-sku">SKU: {{ producto.codigo_sku }}</p>
+                            <p class="producto-descripcion">{{ producto.descripcion|truncatewords:20 }}</p>
+                            
+                            <div class="producto-detalles">
+                                <div class="detalle-item">
+                                    <span class="label">Peso unitario:</span>
+                                    <span class="value">{{ producto.peso_unitario_lb }} lb</span>
+                                </div>
+                                <div class="detalle-item">
+                                    <span class="label">Precio:</span>
+                                    <span class="value precio">${{ producto.precio_unitario }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="cantidad-control">
+                                <label for="id_cantidad_{{ producto.id }}">Cantidad:</label>
+                                <input 
+                                    type="number" 
+                                    id="id_cantidad_{{ producto.id }}" 
+                                    name="cantidad_{{ producto.id }}"
+                                    min="0" 
+                                    max="{{ producto.cantidad_disponible }}"
+                                    value="0"
+                                    class="cantidad-input"
+                                    data-producto-id="{{ producto.id }}"
+                                    data-stock="{{ producto.cantidad_disponible }}"
+                                    data-precio="{{ producto.precio_unitario }}"
+                                    data-peso="{{ producto.peso_unitario_lb }}"
+                                    data-sku="{{ producto.codigo_sku }}"
+                                    placeholder="0"
+                                >
+                                <span class="unidad">{{ producto.unidad_medida }}</span>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="no-productos">
+                        <p>😔 No hay productos disponibles en este momento.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="seccion-observaciones">
+            <h2>📝 Observaciones del Pedido</h2>
+            <div class="form-group">
+                {{ form.observaciones }}
+            </div>
+        </div>
+
+        <!-- Resumen del Pedido (Sidebar) -->
+        <div class="resumen-pedido" id="resumenPedido">
+            <h2>📊 Resumen del Pedido</h2>
+            
+            <div class="resumen-content">
+                <div class="resumen-item">
+                    <span class="label">Total de items:</span>
+                    <span class="value" id="totalItems">0</span>
+                </div>
+                
+                <div class="resumen-item">
+                    <span class="label">Peso total:</span>
+                    <span class="value" id="pesoTotal">0.00 lb</span>
+                </div>
+                
+                <div class="resumen-item">
+                    <span class="label">Monto total:</span>
+                    <span class="value monto" id="montoTotal">$0.00</span>
+                </div>
+                
+                <div class="resumen-item tipo-pedido" id="tipoPedidoContainer" style="display: none;">
+                    <span class="label">Tipo de pedido:</span>
+                    <span class="value" id="tipoPedido">-</span>
+                </div>
+                
+                <div class="alert alert-warning" id="alerta200lb" style="display: none;">
+                    ⚠️ <strong>Atención:</strong> El peso supera 200 lb. Se requerirá gestión de contenedor y obsequio material.
+                </div>
+            </div>
+            
+            <div class="acciones-formulario">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    ✅ Confirmar Pedido
+                </button>
+                <a href="{% url 'mis_pedidos' %}" class="btn btn-secondary btn-lg">
+                    ❌ Cancelar
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript para cálculo en tiempo real -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = document.querySelectorAll('.cantidad-input');
+    const totalItemsEl = document.getElementById('totalItems');
+    const pesoTotalEl = document.getElementById('pesoTotal');
+    const montoTotalEl = document.getElementById('montoTotal');
+    const tipoPedidoContainer = document.getElementById('tipoPedidoContainer');
+    const tipoPedidoEl = document.getElementById('tipoPedido');
+    const alerta200lb = document.getElementById('alerta200lb');
+    
+    function calcularResumen() {
+        let totalItems = 0;
+        let pesoTotal = 0;
+        let montoTotal = 0;
+        
+        inputs.forEach(input => {
+            const cantidad = parseInt(input.value) || 0;
+            if (cantidad > 0) {
+                const precio = parseFloat(input.dataset.precio) || 0;
+                const peso = parseFloat(input.dataset.peso) || 0;
+                
+                totalItems += cantidad;
+                pesoTotal += cantidad * peso;
+                montoTotal += cantidad * precio;
+            }
+        });
+        
+        // Actualizar UI
+        totalItemsEl.textContent = totalItems;
+        pesoTotalEl.textContent = pesoTotal.toFixed(2) + ' lb';
+        montoTotalEl.textContent = '$' + montoTotal.toFixed(2);
+        
+        // Verificar límite de 200lb
+        if (pesoTotal > 200) {
+            tipoPedidoContainer.style.display = 'block';
+            tipoPedidoEl.textContent = 'Contenedor (> 200 lb)';
+            tipoPedidoEl.className = 'value badge badge-danger';
+            alerta200lb.style.display = 'block';
+        } else {
+            tipoPedidoContainer.style.display = 'block';
+            tipoPedidoEl.textContent = 'Paquetería (< 200 lb)';
+            tipoPedidoEl.className = 'value badge badge-success';
+            alerta200lb.style.display = 'none';
+        }
+    }
+    
+    // Event listeners
+    inputs.forEach(input => {
+        input.addEventListener('input', calcularResumen);
+        input.addEventListener('change', calcularResumen);
+    });
+    
+    // Calcular al cargar
+    calcularResumen();
+});
+</script>
+{% endblock %}
